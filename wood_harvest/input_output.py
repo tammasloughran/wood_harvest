@@ -13,7 +13,7 @@ def load_access_file(infile:str, var:str)->np.ndarray:
     var - name of variable to load
     """
     accessnc = nc.Dataset(infile, 'r')
-    access_data = accessnc.variables[var][:,1:4,...].sum(axis=(-1,-2,-3))
+    access_data = accessnc.variables[var][:,0:4,...].sum(axis=(-1,-2,-3))
     accessnc.close()
     return access_data
 
@@ -70,4 +70,16 @@ def load_ncyears(ncfile):
     times = ncfile.variables['time'][:]
     dates = nc.num2date(times, ncfile.variables['time'].units)
     return np.array([d.year for d in dates])
+
+
+def load_harvest_pool(infile:str):
+    """Load an initial wood harvest pool.
+
+    infile - input file name
+    """
+    ncfile = nc.Dataset(infile, 'r')
+    variables = list(ncfile.variables.keys())
+    data = ncfile.variables[variables[0]][-1,0:4,...].squeeze().data
+    data[data<0] = np.nan
+    return data
 

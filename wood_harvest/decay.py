@@ -43,7 +43,7 @@ def run_harvest(
 
         # Load the harvested wood flux `wood_flux` data.
         iyear = np.where(ncyears==year)[0][0] # This is annual average, so I only need 1 value.
-        wood_flux = ncfile.variables[varname][iyear,1:4,...].squeeze().data
+        wood_flux = ncfile.variables[varname][iyear,0:4,...].squeeze().data
         wood_flux[wood_flux<0] = np.nan
 
         for n in range(N_WOOD_POOLS):

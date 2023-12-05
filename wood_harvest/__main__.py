@@ -6,7 +6,7 @@ import os
 import matplotlib.pyplot as plt
 
 from wood_harvest.decay import decay_wood_harvest, run_harvest
-from wood_harvest.input_output import load_access, open_wood_flux, load_ncyears
+from wood_harvest.input_output import load_access, open_wood_flux, load_ncyears, load_harvest_pool
 from wood_harvest.plotting import plot_wood
 
 def main():
@@ -40,9 +40,8 @@ def main():
     parser.add_argument('-w', '--wood-harvest',
             dest='wood_harvest',
             nargs=3,
-            type=float,
             required=False,
-            default=[0.0,0.0,0.0],
+            default=['0.0','0.0','0.0'],
             help="Initial wood harvest product pool size",
             )
     parser.add_argument('-f', '--harvest-frac',
@@ -63,6 +62,7 @@ def main():
             )
     args = parser.parse_args()
 
+
     # Open the wood flux file
     ncfile = open_wood_flux(args.wood_flux_file)
 
@@ -71,6 +71,13 @@ def main():
 
     # Create list of years to run over.
     years = list(range(args.start_year, args.end_year+1))
+
+    # Load initial wood harvest pools
+    for i in range(len(args.wood_harvest)):
+        if args.wood_harvest[i][-3:]=='.nc':
+            args.wood_harvest[i] = load_harvest_pool(args.wood_harvest[i])
+        else:
+            args.wood_harvest[i] = float(args.wood_harvest[i])
 
     # Run the simulation
     if not os.path.isdir('./output'):
