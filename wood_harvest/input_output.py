@@ -78,8 +78,12 @@ def load_harvest_pool(infile:str):
     infile - input file name
     """
     ncfile = nc.Dataset(infile, 'r')
-    variables = list(ncfile.variables.keys())
-    data = ncfile.variables[variables[0]][-1,0:4,...].squeeze().data
-    data[data<0] = np.nan
+    for var in list(ncfile.variables.keys()):
+        if ncfile.variables[var].ndim>2:
+            selvar = var
+    data = ncfile.variables[selvar][-1,0:4,...].squeeze().data
+    data[data>1e5] = np.nan
+    data[data<-1e5] = np.nan
+    data[data<0] = 0
     return data
 
