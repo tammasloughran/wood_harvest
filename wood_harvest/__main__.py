@@ -4,9 +4,11 @@ import argparse
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from wood_harvest.decay import decay_wood_harvest, run_harvest
-from wood_harvest.input_output import load_access, open_wood_flux, load_ncyears, load_harvest_pool
+from wood_harvest.input_output import load_access, load_access_global, \
+        open_wood_flux, load_ncyears, load_harvest_pool
 from wood_harvest.plotting import plot_wood
 
 def main():
@@ -97,7 +99,10 @@ def main():
     ncfile.close()
 
     # Load the ACCESS results.
-    access_wood_harvest, access_wood_respiration = load_access()
+    if history_wood_harvest_global[-1]<100:
+        access_wood_harvest, access_wood_respiration = load_access_global()
+    else:
+        access_wood_harvest, access_wood_respiration = load_access()
 
     # Plot the results
     plot_wood(

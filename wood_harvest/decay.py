@@ -34,6 +34,14 @@ def run_harvest(
     harvest_frac - the proprotion of harvested mass allocated to the product pools.
     tau - the decay rate of the wood product pools.
     """
+
+    # Check dimensions of wood_flux data.
+    shape = ncfile.variables[varname].shape
+    if np.sum(np.greater(shape, 1))>1:
+        woody_only = True
+    else:
+        woody_only = False
+
     # Initialize history variables
     history_wood_harvest_global = []
     history_wood_respiration_global = []
@@ -43,7 +51,10 @@ def run_harvest(
 
         # Load the harvested wood flux `wood_flux` data.
         iyear = np.where(ncyears==year)[0][0] # This is annual average, so I only need 1 value.
-        wood_flux = ncfile.variables[varname][iyear,0:4,...].squeeze().data
+        if woody_only:
+            wood_flux = ncfile.variables[varname][iyear,0:4].squeeze().data
+        else:
+            wood_flux = ncfile.variables[varname][iyear].squeeze().data
         wood_flux[wood_flux<0] = np.nan
 
         for n in range(N_WOOD_POOLS):
@@ -63,11 +74,17 @@ def run_harvest(
         # Summarise to history variables
         wood_harvest_global = 0
         for n in range(N_WOOD_POOLS):
-            wood_harvest_global += np.nansum(wood_harvest[n], axis=(-1,-2,-3))
+            if woody_only:
+                wood_harvest_global += np.nansum(wood_harvest[n], axis=(-1,-2,-3))
+            else:
+                wood_harvest_global += wood_harvest[n]
         history_wood_harvest_global.append(wood_harvest_global)
         wood_respiration_global = 0
         for n in range(N_WOOD_POOLS):
-            wood_respiration_global += np.nansum(wood_respiration[n], axis=(-1,-2,-3))
+            if woody_only:
+                wood_respiration_global += np.nansum(wood_respiration[n], axis=(-1,-2,-3))
+            else:
+                wood_respiration_global += wood_respiration[n]
         history_wood_respiration_global.append(wood_respiration_global)
         print(year, wood_harvest_global, wood_respiration_global)
 

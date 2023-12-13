@@ -58,6 +58,23 @@ def load_access():
     return access_wood_harvest, access_wood_respiration
 
 
+def load_access_global():
+    access_wood_harvest = yearly_mean_from_monthly(
+            nc.Dataset(
+                '/g/data/p66/tfl561/archive_data/HI-05/wood_harvest_1850-2014_global_sum.nc',
+                'r',
+                ).variables['wood_harvest_1'][:].squeeze()
+            )
+    access_wood_respiration = yearly_mean_from_monthly(
+            nc.Dataset(
+                '/g/data/p66/tfl561/archive_data/HI-05/wood_respiration_1850-2014_global_sum.nc',
+                'r',
+                ).variables['wood_respiration_1'][:].squeeze()
+            )
+    return access_wood_harvest, access_wood_respiration
+
+
+
 def open_wood_flux(wood_flux_file):
     """Open the wood_flux file for reading.
     """
