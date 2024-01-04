@@ -28,6 +28,7 @@ fractions = np.load('data/fractions.npy')
 
 # Load the cell area
 cell_area = nc.Dataset(AREA_FILE, 'r').variables['cell_area'][:]
+land_area = nc.Dataset('data/land_area.nc', 'r').variables['areacella'][:]
 
 # Load the woody_area for single point runs
 pft_area = nc.Dataset(
@@ -53,38 +54,43 @@ access_wood_respiration = nc.Dataset(
         '/g/data/p66/tfl561/archive_data/HI-05/wood_respiration_1850-2014_global_sum.nc',
         'r',
         ).variables['wood_respiration_1'][::12].squeeze()
+access_wood_respiration_cell = nc.Dataset(
+        'data/wood_respiration_cell_1850-2014.nc',
+        'r',
+        ).variables['wood_respiration_1'][::12].squeeze()
+access_wood_respiration_cell = access_wood_respiration_cell.sum(axis=(-1,-2))/1e12
 
 # Apply fractions and global sum.
 if single_point:
     wood_respiration *= pft_area/1e4*2
     wood_harvest *= pft_area/1e4*2
 else:
-    wood_respiration *= fractions*cell_area
+    wood_respiration *= land_area#fractions*cell_area
     wood_harvest *= fractions*cell_area
 wood_respiration_series = np.nansum(wood_respiration, axis=(-1,-2,-3))
 wood_harvest_series = np.nansum(wood_harvest, axis=(-1,-2,-3))
 
 # Plot the result.
-years = np.arange(START_YEAR, END_YEAR + 1)
-plt.figure()
-plt.plot(years, wood_respiration_series.sum(axis=0)/1e15, label='total')
-for i in range(NPOOLS):
-    plt.plot(years, wood_respiration_series[i]/1e15, label=f'from pool {i+1}')
-plt.plot(years, access_wood_respiration, label='ACCESS')
-plt.ylabel('Pg(C)/year')
-plt.xlabel('Time (year)')
-plt.legend()
-plt.title('Wood product respiration')
-
-plt.figure()
-plt.plot(years, wood_harvest_series.sum(axis=0)/1e15, label='total')
-for i in range(NPOOLS):
-    plt.plot(years, wood_harvest_series[i]/1e15, label=f'pool {i+1}')
-plt.plot(years, access_wood_harvest, label='ACCESS')
-plt.ylabel('Pg(C)')
-plt.xlabel('Time (year)')
-plt.legend()
-plt.title('Wood product pools')
+#years = np.arange(START_YEAR, END_YEAR + 1)
+#plt.figure()
+#plt.plot(years, wood_respiration_series.sum(axis=0)/1e15, label='total')
+#for i in range(NPOOLS):
+#    plt.plot(years, wood_respiration_series[i]/1e15, label=f'from pool {i+1}')
+#plt.plot(years, access_wood_respiration, label='ACCESS')
+#plt.ylabel('Pg(C)/year')
+#plt.xlabel('Time (year)')
+#plt.legend()
+#plt.title('Wood product respiration')
+#
+#plt.figure()
+#plt.plot(years, wood_harvest_series.sum(axis=0)/1e15, label='total')
+#for i in range(NPOOLS):
+#    plt.plot(years, wood_harvest_series[i]/1e15, label=f'pool {i+1}')
+#plt.plot(years, access_wood_harvest, label='ACCESS')
+#plt.ylabel('Pg(C)')
+#plt.xlabel('Time (year)')
+#plt.legend()
+#plt.title('Wood product pools')
 
 # Load the NEE for ACCESS.
 ncfile = nc.Dataset('data/nee_ACCESS-ESM1-5_global_sum.nc', 'r')
@@ -109,16 +115,18 @@ nbp_hoffman_cumsum = np.cumsum(nbp_hoffman)
 nbp_python = nee_access + wood_respiration_series.sum(axis=0)/1e15
 nbp_python_cumsum = np.cumsum(nbp_python)
 
+# ACCESS_reconstructed nbp
+mynbp = nee_access + access_wood_respiration
+
 plt.figure()
-#import ipdb
-#ipdb.set_trace()
 plt.plot(range(1850, 2011), nbp_hoffman_cumsum, color='gray', label='Hoffman')
 plt.plot(range(1850, 2012), nbp_access_cumsum, color='red', label='ACCESS-ESM1-5')
 plt.plot(range(1850, 2015), nbp_python_cumsum, color='blue', label='python')
 plt.plot(range(1850, 2015), np.cumsum(nee_access), color='orange', label='NEE_access')
+plt.plot(range(1850, 2015), np.cumsum(mynbp), color='pink', label='mynbp')
 plt.ylabel('Pg(C)')
 plt.xlabel('Time (year)')
-plt.hlines(0, range(1850, 2015))
+plt.hlines(0, 1850, 2015)
 plt.legend()
 
 plt.show()

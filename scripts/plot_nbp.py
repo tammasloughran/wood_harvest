@@ -13,31 +13,46 @@ NPOOLS = 3
 FRAC_FILE = '/g/data/p66/tfl561/archive_data/HI-05/frac_HI-05_1850-2014.nc'
 AREA_FILE = '/g/data/p66/tfl561/archive_data/HI-05/cell_area.nc'
 
-# Load the Hoffman nbp data
-ncfile = nc.Dataset('data/nbp_hoffman_1850-2010.nc', 'r')
-nbp_hoffman = ncfile.variables['nbp'][:].squeeze()*-1
-ncfile.close()
-nbp_hoffman_cumsum = np.cumsum(nbp_hoffman)
+# Use saved numpy arrays?
+saved = True
 
-# Load the NBP for ACCESS
-ncfile = nc.Dataset('data/Hoffman_ACCESS-ESM1-5.nc', 'r')
-nbp_access_cumsum = ncfile\
-        .groups['MeanState']\
-        .variables['accumulate_of_nbp_over_global'][:]\
-        .squeeze()
-ncfile.close()
+if not saved:
+    # Load the Hoffman nbp data
+    ncfile = nc.Dataset('data/nbp_hoffman_1850-2010.nc', 'r')
+    nbp_hoffman = ncfile.variables['nbp'][:].squeeze()*-1
+    ncfile.close()
+    nbp_hoffman_cumsum = np.cumsum(nbp_hoffman)
+    np.save('data/nbp_hoffman_cumsum.npy', nbp_hoffman_cumsum.data)
 
-# Load the NEE from ACCESS
-ncfile = nc.Dataset('data/nep_respiration_gobal_sum.nc')
-nep = ncfile.variables['nep'][:].squeeze()*-1
-ncfile.close()
+    # Load the NBP for ACCESS
+    ncfile = nc.Dataset('data/Hoffman_ACCESS-ESM1-5.nc', 'r')
+    nbp_access_cumsum = ncfile\
+            .groups['MeanState']\
+            .variables['accumulate_of_nbp_over_global'][:]\
+            .squeeze()
+    ncfile.close()
+    np.save('data/nbp_access_cumsum.npy', nbp_access_cumsum.data)
 
-# Load ACCESS wood resp
-ncfile = nc.Dataset('data/wood_respiration_gobal_sum.nc')
-access_wood_resp = ncfile.variables['wood_respiration_1'][:].squeeze()*-1
-ncfile.close()
+    # Load the NEE from ACCESS
+    ncfile = nc.Dataset('data/nep_respiration_gobal_sum.nc')
+    nep = ncfile.variables['nep'][:].squeeze()*-1
+    ncfile.close()
+    np.save('data/nep_access_cumsum.npy', nep.data)
 
-my_nbp = nep - access_wood_resp
+    # Load ACCESS wood resp
+    ncfile = nc.Dataset('data/wood_respiration_gobal_sum.nc')
+    access_wood_resp = ncfile.variables['wood_respiration_1'][:].squeeze()*-1
+    ncfile.close()
+    np.save('data/wood_resp_access_cumsum.npy', access_wood_resp.data)
+
+    my_nbp = nep - access_wood_resp
+    np.save('data/mynbp_access_cumsum.npy', my_nbp.data)
+else:
+    nbp_hoffman_cumsum = np.load('data/nbp_hoffman_cumsum.npy')
+    nbp_access_cumsum = np.load('data/nbp_access_cumsum.npy')
+    nep = np.load('data/nep_access_cumsum.npy')
+    my_nbp = np.load('data/mynbp_access_cumsum.npy')
+    access_wood_resp = np.load('data/wood_resp_access_cumsum.npy')
 
 
 # Load wood_harvest data numpy files.
